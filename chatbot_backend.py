@@ -12,8 +12,8 @@ load_dotenv()
 
 model_gen = HuggingFaceEndpoint(
     # repo_id="Qwen/Qwen2.5-7B-Instruct",
-    # repo_id="google/gemma-2-2b-it",
-    repo_id="openai/gpt-oss-20b",
+    repo_id="google/gemma-2-2b-it",
+    # repo_id="openai/gpt-oss-20b",
     # repo_id="MiniMaxAI/MiniMax-M2",
     # repo_id="meta-llama/Llama-3.1-70B-Instruct",
     # repo_id="moonshotai/Kimi-K2-Thinking",
@@ -72,51 +72,23 @@ def delete_thread_from_db(thread_id):
     conn.commit()
 
 
-def save_thread_to_db(thread_id, messages, title):
-    config = {"configurable": {"thread_id": thread_id, "checkpoint_ns": "chat"}}
 
-    # Get existing snapshot (returns dict or None)
-    snapshot = checkpointer.get(config)
+# def load_conversation(thread_id):
+#     return chatbot.get_state(config={'configurable': {'thread_id': thread_id}}).values['messages']
 
-    if snapshot is None:
-        existing_values = {}
-        new_versions = {}
-    else:
-        # snapshot itself is a dict, may contain channel_values & channel_versions
-        existing_values = snapshot.get("channel_values", {})
-        new_versions = snapshot.get("channel_versions", {})
+# print(retrieve_all_threads())
+# print(load_conversation("74687edc-8ae0-468f-8314-fec2952d7f69"))
 
-    # Update values
-    existing_values["messages"] = messages
-    existing_values["title"] = title
+# def load_conversation(thread_id):
+#     messages = chatbot.get_state(config={'configurable': {'thread_id': thread_id}}).values['messages']
+#     tem_messages = []
+#     for message in messages:
+#         if isinstance(message, HumanMessage):
+#             role = 'user'
+#         else:
+#             role = 'assistant'
+#         tem_messages.append({'role': role, 'content': message.content})
 
-    # Generate a unique checkpoint ID
-    checkpoint_id = str(uuid.uuid4())
+#     return tem_messages[-1]
 
-    checkpoint = {
-        "v": 1,
-        "ts": None,
-        "id": checkpoint_id,
-        "channel_values": existing_values,
-        "channel_versions": new_versions,
-        "pending_sends": {},
-        "versions_seen": {},
-    }
-
-    # Persist checkpoint
-    checkpointer.put(config, checkpoint, metadata={}, new_versions=new_versions)
-
-
-def load_thread_from_db(thread_id):
-    config = {"configurable": {"thread_id": thread_id, "checkpoint_ns": "chat"}}
-    snapshot = checkpointer.get(config)
-
-    if snapshot is None:
-        return {"messages": [], "title": "Untitled Chat"}
-
-    # Use get() safely because snapshot is a dict
-    channel_values = snapshot.get("channel_values", {})
-    messages = channel_values.get("messages", [])
-    title = channel_values.get("title", "Untitled Chat")
-
-    return {"messages": messages, "title": title}
+# print(load_conversation("74687edc-8ae0-468f-8314-fec2952d7f69"))
